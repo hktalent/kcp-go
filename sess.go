@@ -768,8 +768,8 @@ type (
 		block        BlockCrypt     // block encryption
 		dataShards   int            // FEC data shard
 		parityShards int            // FEC parity shard
-		conn         net.PacketConn // the underlying packet connection
-		ownConn      bool           // true if we created conn internally, false if provided by caller
+		Conn         net.PacketConn // the underlying packet connection
+		ownConn      bool           // true if we created Conn internally, false if provided by caller
 
 		sessions        map[string]*UDPSession // all sessions accepted by this Listener
 		sessionLock     sync.RWMutex
@@ -838,7 +838,7 @@ func (l *Listener) packetInput(data []byte, addr net.Addr) {
 
 		if s == nil && convRecovered { // new session
 			if len(l.chAccepts) < cap(l.chAccepts) { // do not let the new sessions overwhelm accept queue
-				s := newUDPSession(conv, l.dataShards, l.parityShards, l, l.conn, false, addr, l.block)
+				s := newUDPSession(conv, l.dataShards, l.parityShards, l, l.Conn, false, addr, l.block)
 				s.kcpInput(data)
 				l.sessionLock.Lock()
 				l.sessions[addr.String()] = s
@@ -865,7 +865,7 @@ func (l *Listener) notifyReadError(err error) {
 
 // SetReadBuffer sets the socket read buffer for the Listener
 func (l *Listener) SetReadBuffer(bytes int) error {
-	if nc, ok := l.conn.(setReadBuffer); ok {
+	if nc, ok := l.Conn.(setReadBuffer); ok {
 		return nc.SetReadBuffer(bytes)
 	}
 	return errInvalidOperation
@@ -873,7 +873,7 @@ func (l *Listener) SetReadBuffer(bytes int) error {
 
 // SetWriteBuffer sets the socket write buffer for the Listener
 func (l *Listener) SetWriteBuffer(bytes int) error {
-	if nc, ok := l.conn.(setWriteBuffer); ok {
+	if nc, ok := l.Conn.(setWriteBuffer); ok {
 		return nc.SetWriteBuffer(bytes)
 	}
 	return errInvalidOperation
@@ -885,11 +885,11 @@ func (l *Listener) SetWriteBuffer(bytes int) error {
 // this function instead.
 func (l *Listener) SetDSCP(dscp int) error {
 	// interface enabled
-	if ts, ok := l.conn.(setDSCP); ok {
+	if ts, ok := l.Conn.(setDSCP); ok {
 		return ts.SetDSCP(dscp)
 	}
 
-	if nc, ok := l.conn.(net.Conn); ok {
+	if nc, ok := l.Conn.(net.Conn); ok {
 		var succeed bool
 		if err := ipv4.NewConn(nc).SetTOS(dscp << 2); err == nil {
 			succeed = true
@@ -956,7 +956,7 @@ func (l *Listener) Close() error {
 	var err error
 	if once {
 		if l.ownConn {
-			err = l.conn.Close()
+			err = l.Conn.Close()
 		}
 	} else {
 		err = errors.WithStack(io.ErrClosedPipe)
@@ -976,7 +976,7 @@ func (l *Listener) closeSession(remote net.Addr) (ret bool) {
 }
 
 // Addr returns the listener's network address, The Addr returned is shared by all invocations of Addr, so do not modify it.
-func (l *Listener) Addr() net.Addr { return l.conn.LocalAddr() }
+func (l *Listener) Addr() net.Addr { return l.Conn.LocalAddr() }
 
 // Listen listens for incoming KCP packets addressed to the local address laddr on the network "udp",
 func Listen(laddr string) (net.Listener, error) { return ListenWithOptions(laddr, nil, 0, 0) }
@@ -1008,7 +1008,7 @@ func ServeConn(block BlockCrypt, dataShards, parityShards int, conn net.PacketCo
 
 func serveConn(block BlockCrypt, dataShards, parityShards int, conn net.PacketConn, ownConn bool) (*Listener, error) {
 	l := new(Listener)
-	l.conn = conn
+	l.Conn = conn
 	l.ownConn = ownConn
 	l.sessions = make(map[string]*UDPSession)
 	l.chAccepts = make(chan *UDPSession, acceptBacklog)

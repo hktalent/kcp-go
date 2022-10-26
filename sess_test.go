@@ -586,8 +586,8 @@ func TestListenerOwnedPacketConn(t *testing.T) {
 	defer l.Close()
 	// Replace the internal net.PacketConn with one that remembers when it
 	// has been closed.
-	pconn := newClosedFlagPacketConn(l.conn)
-	l.conn = pconn
+	pconn := newClosedFlagPacketConn(l.Conn)
+	l.Conn = pconn
 
 	if pconn.Closed {
 		t.Fatal("owned PacketConn closed before Listener.Close()")

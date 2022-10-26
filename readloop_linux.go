@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package kcp
@@ -63,13 +64,13 @@ func (s *UDPSession) readLoop() {
 // monitor incoming data for all connections of server
 func (l *Listener) monitor() {
 	var xconn batchConn
-	if _, ok := l.conn.(*net.UDPConn); ok {
-		addr, err := net.ResolveUDPAddr("udp", l.conn.LocalAddr().String())
+	if _, ok := l.Conn.(*net.UDPConn); ok {
+		addr, err := net.ResolveUDPAddr("udp", l.Conn.LocalAddr().String())
 		if err == nil {
 			if addr.IP.To4() != nil {
-				xconn = ipv4.NewPacketConn(l.conn)
+				xconn = ipv4.NewPacketConn(l.Conn)
 			} else {
-				xconn = ipv6.NewPacketConn(l.conn)
+				xconn = ipv6.NewPacketConn(l.Conn)
 			}
 		}
 	}

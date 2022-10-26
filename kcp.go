@@ -37,7 +37,7 @@ var refTime time.Time = time.Now()
 // currentMs returns current elapsed monotonic milliseconds since program startup
 func currentMs() uint32 { return uint32(time.Since(refTime) / time.Millisecond) }
 
-// output_callback is a prototype which ought capture conn and call conn.Write
+// output_callback is a prototype which ought capture Conn and call Conn.Write
 type output_callback func(buf []byte, size int)
 
 /* encode 8 bits unsigned int */

@@ -393,7 +393,7 @@ func TestClose(t *testing.T) {
 	cli.Close()
 	n, err = io.ReadFull(cli, buf)
 	if err != nil {
-		t.Fatal("closed conn drain bytes failed", err, n)
+		t.Fatal("closed Conn drain bytes failed", err, n)
 	}
 
 	// after drain, read should return error
@@ -649,8 +649,8 @@ func TestUDPSessionOwnedPacketConn(t *testing.T) {
 	defer client.Close()
 	// Replace the internal net.PacketConn with one that remembers when it
 	// has been closed.
-	pconn := newClosedFlagPacketConn(client.conn)
-	client.conn = pconn
+	pconn := newClosedFlagPacketConn(client.Conn)
+	client.Conn = pconn
 
 	if pconn.Closed {
 		t.Fatal("owned PacketConn closed before UDPSession.Close()")

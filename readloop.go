@@ -10,7 +10,7 @@ func (s *UDPSession) defaultReadLoop() {
 	buf := make([]byte, mtuLimit)
 	var src string
 	for {
-		if n, addr, err := s.conn.ReadFrom(buf); err == nil {
+		if n, addr, err := s.Conn.ReadFrom(buf); err == nil {
 			// make sure the packet is from the same source
 			if src == "" { // set source address
 				src = addr.String()

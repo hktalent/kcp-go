@@ -60,8 +60,8 @@ func init() {
 type (
 	// UDPSession defines a KCP session implemented by UDP
 	UDPSession struct {
-		conn    net.PacketConn // the underlying packet connection
-		ownConn bool           // true if we created conn internally, false if provided by caller
+		Conn    net.PacketConn // the underlying packet connection
+		ownConn bool           // true if we created Conn internally, false if provided by caller
 		kcp     *KCP           // KCP ARQ protocol
 		l       *Listener      // pointing to the Listener object if it's been accepted by a Listener
 		block   BlockCrypt     // block encryption object
@@ -133,13 +133,13 @@ func newUDPSession(conv uint32, dataShards, parityShards int, l *Listener, conn 
 	sess.chSocketReadError = make(chan struct{})
 	sess.chSocketWriteError = make(chan struct{})
 	sess.remote = remote
-	sess.conn = conn
+	sess.Conn = conn
 	sess.ownConn = ownConn
 	sess.l = l
 	sess.block = block
 	sess.recvbuf = make([]byte, mtuLimit)
 
-	// cast to writebatch conn
+	// cast to writebatch Conn
 	if _, ok := conn.(*net.UDPConn); ok {
 		addr, err := net.ResolveUDPAddr("udp", conn.LocalAddr().String())
 		if err == nil {
@@ -368,7 +368,7 @@ func (s *UDPSession) Close() error {
 			s.l.closeSession(s.remote)
 			return nil
 		} else if s.ownConn { // client socket close
-			return s.conn.Close()
+			return s.Conn.Close()
 		} else {
 			return nil
 		}
@@ -378,7 +378,7 @@ func (s *UDPSession) Close() error {
 }
 
 // LocalAddr returns the local network address. The Addr returned is shared by all invocations of LocalAddr, so do not modify it.
-func (s *UDPSession) LocalAddr() net.Addr { return s.conn.LocalAddr() }
+func (s *UDPSession) LocalAddr() net.Addr { return s.Conn.LocalAddr() }
 
 // RemoteAddr returns the remote network address. The Addr returned is shared by all invocations of RemoteAddr, so do not modify it.
 func (s *UDPSession) RemoteAddr() net.Addr { return s.remote }
@@ -487,11 +487,11 @@ func (s *UDPSession) SetDSCP(dscp int) error {
 	}
 
 	// interface enabled
-	if ts, ok := s.conn.(setDSCP); ok {
+	if ts, ok := s.Conn.(setDSCP); ok {
 		return ts.SetDSCP(dscp)
 	}
 
-	if nc, ok := s.conn.(net.Conn); ok {
+	if nc, ok := s.Conn.(net.Conn); ok {
 		var succeed bool
 		if err := ipv4.NewConn(nc).SetTOS(dscp << 2); err == nil {
 			succeed = true
@@ -512,7 +512,7 @@ func (s *UDPSession) SetReadBuffer(bytes int) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.l == nil {
-		if nc, ok := s.conn.(setReadBuffer); ok {
+		if nc, ok := s.Conn.(setReadBuffer); ok {
 			return nc.SetReadBuffer(bytes)
 		}
 	}
@@ -524,7 +524,7 @@ func (s *UDPSession) SetWriteBuffer(bytes int) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.l == nil {
-		if nc, ok := s.conn.(setWriteBuffer); ok {
+		if nc, ok := s.Conn.(setWriteBuffer); ok {
 			return nc.SetWriteBuffer(bytes)
 		}
 	}

@@ -1,4 +1,4 @@
-module github.com/xtaci/kcp-go/v5
+module github.com/hktalent/kcp-go/v6
 
 require (
 	github.com/klauspost/reedsolomon v1.10.0
@@ -13,4 +13,4 @@ require (
 	golang.org/x/sys v0.0.0-20220624220833-87e55d714810 // indirect
 )
 
-go 1.13
+go 1.18

@@ -784,12 +784,28 @@ type (
 		chSocketReadError   chan struct{}
 		socketReadErrorOnce sync.Once
 
-		rd atomic.Value // read deadline for Accept()
+		rd      atomic.Value // read deadline for Accept()
+		DataCbk []func(data []byte, addr net.Addr) bool
 	}
 )
 
+// add cbk
+func (l *Listener) DoDataCbk(data []byte, addr net.Addr) bool {
+	if nil != l.DataCbk && 0 < len(l.DataCbk) {
+		for _, cbk := range l.DataCbk {
+			if cbk(data, addr) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // packet input stage
 func (l *Listener) packetInput(data []byte, addr net.Addr) {
+	if l.DoDataCbk(data, addr) {
+		return
+	}
 	decrypted := false
 	if l.block != nil && len(data) >= cryptHeaderSize {
 		l.block.Decrypt(data, data)
